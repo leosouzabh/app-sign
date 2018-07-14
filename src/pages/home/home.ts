@@ -79,10 +79,9 @@ export class HomePage {
 				correctOrientation: true
 		};
 		
-		this.presentLoadingText();
-
 		this.camera.getPicture(options)
 			.then((dataImage) => {
+				this.presentLoadingText();
 				this._apiService.postImage(dataImage)
 					.subscribe(res => {
 						console.log(res);
