@@ -38,25 +38,8 @@ export class HomePage {
 		alert.present();
   	}
 
-	mock(){
-		this.presentLoadingText();
-		this._apiService.mockPost()
-			.subscribe(res => {
-				this.montaUrl(res['identificador']);
-				this.montaMsgResultado(res['resultado']);
-				this.loading.dismiss();
 
-			}, fail => {
-				console.error(fail);
-				this.url = 'http://35.196.124.122:5000/static/20180714_191356-644823/__resultado.jpg';
-				this.showAlert('Erro', 'Algo aconteceu de errado!');
-				this.loading.dismiss();
-			}
-	 ); 
-		
-	}
-
-	private montaMsgResultado(resultado:boolean){
+	private montaMsgResultadoVerificacao(resultado:boolean){
 		let titulo:string = 'Sucesso';
 		let msg:string = 'Assinaturas validadas e conferidas!!';
 		if (resultado == false){
@@ -66,16 +49,24 @@ export class HomePage {
 		this.showAlert(titulo, msg);
 	}
 
-	private montaUrl(identificador:String){
-		this.url = `http://35.196.124.122:5000/static/${identificador}/__resultado.jpg`;
+	private montaUrl(identificador:String, image:String){
+		this.url = `http://${this._apiService.getUrl()}/static/${identificador}/${image}`;
 	}
 
-	captura(){
+	capturaFromCamera(){
+		this.processaImagem(1);
+	}
+	capturaFromGaleria(){
+		this.processaImagem(2);
+	}
+	private processaImagem(source:number){
+	
 		const options: CameraOptions = {
 				quality: 100,
 				destinationType: this.camera.DestinationType.DATA_URL,
 				encodingType: this.camera.EncodingType.JPEG,
 				mediaType: this.camera.MediaType.PICTURE,
+				sourceType: source,
 				correctOrientation: true
 		};
 		
@@ -84,9 +75,7 @@ export class HomePage {
 				this.presentLoadingText();
 				this._apiService.postImage(dataImage)
 					.subscribe(res => {
-						console.log(res);
-						this.montaUrl(res['imagem'][1]);
-						this.montaMsgResultado(res['imagem'][0]);
+						this.trataResultado(res);
 						this.loading.dismiss();
 
 					}, fail => {
@@ -103,6 +92,19 @@ export class HomePage {
 			});
 
 		//console.info();
+
+	}
+
+	private trataResultado(json) {
+		console.log(json);
+		if (json["erro"] == true){
+			this.showAlert('Erro', json['message']);
+			this.montaUrl(json['identificador'], 'identificadas_ass.jpg');
+
+		} else {
+			this.montaMsgResultadoVerificacao(json['resultado']);
+			this.montaUrl(json['identificador'], '__resultado.jpg');
+		}
 
 	}
 
